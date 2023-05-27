@@ -1,15 +1,20 @@
 import React, { useEffect, useState } from "react";
 import { FaUser, FaShoppingCart, FaSearch } from "react-icons/fa";
+import { AiFillShopping } from "react-icons/ai";
 
 export default function AppBar() {
   const [auth, setAuth] = useState(false);
+  const [admin, setAdmin] = useState(false);
 
   useEffect(() => {
     const token = window.localStorage.getItem("access");
+    const admin = window.localStorage.getItem("admin");
 
     if (token) {
       setAuth(true);
     }
+
+    setAdmin(admin);
   }, []);
 
   function logout() {
@@ -33,18 +38,25 @@ export default function AppBar() {
       </div>
 
       <ul className="d-flex m-0 list-unstyled align-items-center justify-content-center">
-        <li className="px-2">
-          <a className="nav-link" href="#">
-            <FaSearch />
-          </a>
-        </li>
-        <li className="px-2">
-          <a className="nav-link" href="#">
-            <FaShoppingCart />
-          </a>
-        </li>
+        {auth && (
+          <>
+            <li className="px-2">
+              <a className="nav-link" href="/">
+                <AiFillShopping />
+              </a>
+            </li>
+            <li className="px-2">
+              <a className="nav-link" href="/cart">
+                <FaShoppingCart />
+              </a>
+            </li>
+          </>
+        )}
         <li className="px-3">
-          <a className="nav-link" href={auth ? "#" : "/auth/login"}>
+          <a
+            className="nav-link"
+            href={auth ? (admin ? "/admin" : "/") : "auth/login"}
+          >
             <FaUser />
           </a>
         </li>

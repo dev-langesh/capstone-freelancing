@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
+import { ModeContext } from "../../context/ModeContext";
+import useMode from "../../hooks/useMode";
 
-export default function AddProduct() {
+export default function AddProduct(props) {
   const [formData, setFormData] = useState({
     name: "",
     brand: "",
@@ -11,6 +13,17 @@ export default function AddProduct() {
     quantity: 0,
     description: "",
   });
+
+  const [mode, setMode] = useMode();
+
+  useEffect(() => {
+    if (mode !== "add") {
+      setFormData({
+        ...props,
+        id: props._id,
+      });
+    }
+  }, [props]);
 
   const handleChange = (e) => {
     setFormData((prev) => {
@@ -38,20 +51,49 @@ export default function AddProduct() {
 
     const token = window.localStorage.getItem("access");
 
-    const res = await axios.post(
-      `${import.meta.env.VITE_APP_API_URL}/products/add`,
-      formData,
-      {
+    let api;
+    let res;
+
+    if (mode === "update") {
+      api = `${import.meta.env.VITE_APP_API_URL}/products/update`;
+
+      res = await axios.put(api, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      }
-    );
+      });
+    } else if (mode === "add") {
+      api = `${import.meta.env.VITE_APP_API_URL}/products/add`;
+
+      res = await axios.post(api, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+    }
+
+    console.log(res.data);
 
     if (res.data === "You don't have the access rights to do this action.") {
       Swal.fire("You don't have access");
     } else {
-      window.location.href = "/products";
+      window.location.href = "/admin";
+    }
+  }
+
+  async function deleteProduct() {
+    let api = `${import.meta.env.VITE_APP_API_URL}/products/delete/${
+      props._id
+    }`;
+
+    let res = await axios.post(api, formData);
+
+    console.log(res.data);
+
+    if (res.data === "You don't have the access rights to do this action.") {
+      Swal.fire("You don't have access");
+    } else {
+      window.location.href = "/admin";
     }
   }
 
@@ -61,7 +103,7 @@ export default function AddProduct() {
         <div className="col-md-8">
           <div className="custom-product-form">
             <h2 style={{ color: "#0a418e" }} className="h4">
-              Product details
+              {mode === "update" ? "Update Product" : "Product details"}
             </h2>
             <form onSubmit={handleSubmit}>
               <div className="column d-flex justify-content-between">
@@ -74,6 +116,7 @@ export default function AddProduct() {
                       id="name"
                       name="name"
                       onChange={handleChange}
+                      value={formData.name}
                       placeholder="Enter name"
                     />
                   </div>
@@ -84,6 +127,7 @@ export default function AddProduct() {
                       className="form-control"
                       id="brand"
                       name="brand"
+                      value={formData.brand}
                       onChange={handleChange}
                       placeholder="Enter brand"
                     />
@@ -95,6 +139,7 @@ export default function AddProduct() {
                       className="form-control"
                       id="category"
                       name="category"
+                      value={formData.category}
                       onChange={handleChange}
                       placeholder="Enter category"
                     />
@@ -107,14 +152,17 @@ export default function AddProduct() {
                       className="form-control"
                       id="quantity"
                       name="quantity"
+                      value={formData.quantity}
                       onChange={handleChange}
                       placeholder="Enter available quantity"
                     />
                   </div>
 
-                  <button type="submit" className="btn btn-primary btn-block">
-                    Submit
-                  </button>
+                  {mode !== "view" && (
+                    <button type="submit" className="btn btn-primary btn-block">
+                      {mode === "update" ? "Update" : "Add Product"}
+                    </button>
+                  )}
                 </div>
 
                 <div className="p-2 d-flex flex-column justify-content-start align-items-start">
@@ -125,6 +173,7 @@ export default function AddProduct() {
                     className="p-2 "
                     cols="30"
                     rows="5"
+                    value={formData.description}
                   ></textarea>
                   <br />
                   <div className="form-group">
@@ -134,6 +183,7 @@ export default function AddProduct() {
                       className="form-control"
                       id="image"
                       name="image"
+                      value={formData.image}
                       onChange={handleChange}
                       placeholder="Enter URL of image"
                     />
@@ -145,10 +195,26 @@ export default function AddProduct() {
                       className="form-control"
                       id="price"
                       name="price"
+                      value={formData.price}
                       onChange={handleChange}
                       placeholder="Enter price in $"
                     />
                   </div>
+
+                  {mode === "update" && mode !== "view" && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={deleteProduct}
+                        className="btn-delete"
+                      >
+                        Delete
+                      </button>
+                    </>
+                  )}
+                  <a href="/admin" className="btn btn-primary">
+                    Back
+                  </a>
                 </div>
               </div>
             </form>

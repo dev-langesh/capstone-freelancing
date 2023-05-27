@@ -41,8 +41,10 @@ export default function Login() {
       window.localStorage.setItem("access", res.data.access);
 
       if (res.data.isAdmin) {
+        window.localStorage.setItem("admin", true);
         window.location.href = "/admin";
       } else {
+        window.localStorage.setItem("admin", false);
         window.location.href = "/";
       }
     } else {
